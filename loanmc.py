@@ -1,65 +1,68 @@
-from scipy.optimize import newton
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from scipy import optimize
 
-# Constructing a yield curve
-def yield_curve(t, b1, b2, b3, ld_t):
+import loanmc
+
+# Loading data into DataHandler
+dh = loanmc.DataHandler()
+dh.import_xls('./historical_data/ZERO_2018.xlsx')
+dh.import_xls('./historical_data/ZERO_2017.xlsx')
+# dh.stats()
+# dh.to_csv('./historical_data/ZERO.csv')
+
+# Truncate a few values for testing
+tmp = dh.df.head()
+
+# Fitting the model for all row
+params_df = loanmc.fit_yield_curves(tmp)
+
+#print(params_df)
+
+exit(0)
+# Testing YieldCurve class
+yc = loanmc.YieldCurve(1, 2, 3, 0.1)
+print(yc.calc(4))
+print(yc.fit(4, 1, 2, 3, 0.1))
+print(yc.fit(4, 2, 2, 2, 0.1))
+
+
+def plot_yield_curves(data_df, params_df):
+    grouped = data_df.groupby('Date')
+
+    # The figure object
+    fig = plt.figure()
     
-    t1 = b1
-    t2 = b2 *  ((1 - np.exp(-ld_t * t)) / (ld_t * t))
-    t3 = b3 *  ((1 - np.exp(-ld_t * t)) / (ld_t * t) * np.exp(-ld_t * t))
-
-    return (t1 + t2 + t3)
-
-
-# A torlesztes utan visszamaradt osszeg
-def remaining(c, H, T, r):
-    '''
-    c: A torlesztoreszlet
-    H: Felvett hitelosszeg
-    T: futamido
-    '''
-
-    rem = H
-    for t in range(T):
-        #r = 0.02  # Hozamgorbe (egyelore vizszintes)
-        exc = 0.03  # Kockazati felar
-        k = (r[t] / 100.00) + exc  # Kamat amit a bank ker
-
-        rem = rem * (1 + k) - c
-    return rem
-
-
-# MAIN
-H = 1224963
-T = 15
-
-t = [1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00, 13.00, 14.00, 15.00]
-r = [1.00, 1.00, 2.00, 2.50, 3.00, 3.50, 3.00, 4.00, 5.00,  7.00,  6.00,  4.00,  4.00,  4.00,  4.00]
-
-print(len(r))
-print(len(t))
-
-#for i in t:
-#    r.append(yield_curve(i, 7, -1, -0.1, 0.3))
-
-# A torleszto kiszamolasa solverrel
-C_res = newton(remaining, 10000, args=(H, T, r))
-print("havi torleszto: " + str(C_res / 12.0))
-
-
-if not abs(remaining(C_res, H, T, r)) < 10e-8:
-    print("nem konvergalt")
-
-plt.plot(t, r)
-plt.show()
- 
-
-
+    # All the plots
+    ims = []
     
-     
-
-
+    # DataFrame to store the fit parameteres
+    params_df = pd.DataFrame(columns = ['Date', 'Beta1', 'Beta2', 'Beta3', 'Lambda', 'RSquared'])
+    
+    for key, day in grouped:
         
+        
+        
+    # The figure object
+    fig = plt.figure()
     
+    # All the plots
+    ims = []
+    
+    # Plot the original data 
+    orig_data, = plt.plot(x_data, y_data, 'r-.')
+    
+    # Plot the fitted data
+    t = np.linspace(0, last_month, 100)
+    fitted, = plt.plot(t, yield_curve(t, b1, b2, b3, l), 'b-')
+    
+    # Accumulate plots for animation
+    ims.append([orig_data, fitted])
+    
+    
+    # Creating an animation and save it
+    ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat_delay=1000)
+    # ani.save('dynamic_images.mp4')
+    plt.show()
