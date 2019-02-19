@@ -32,4 +32,6 @@ class YieldCurve(object):
         self.ldb = ldb
 
         return self.calc(t)
+        
+
 

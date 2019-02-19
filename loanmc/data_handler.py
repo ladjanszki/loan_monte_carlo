@@ -32,6 +32,9 @@ class DataHandler(object):
         else:
             self.df = self.df.append(tmp, ignore_index=True)
 
+    def read_csv(self, file_path):
+        self.df = pd.read_csv(file_path)
+
     def stats(self):
         """
         This function is for giving a simple descriptive
